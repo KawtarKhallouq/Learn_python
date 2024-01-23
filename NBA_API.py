@@ -1,59 +1,53 @@
-def occurrece(n):
-    T=[1,8,3,6,9,8,0,2,1,7,0,1,2,8,3,0,9,7,4,6]
-    occ=0
-    for i in T:
-        if n==i:
-            occ+=1
-        
-    
-    return occ
+from nba_api.stats.static import teams
+from nba_api.stats.endpoints import leaguegamefinder
+import matplotlib.pyplot as plt
+import pandas as pd
+import requests
 
+def one_dict(list_dict):
+    keys = list_dict[0].keys()
+    out_dict = {key: [] for key in keys}
+    for dict_ in list_dict:
+        for key, value in dict_.items():
+            out_dict[key].append(value)
+    return out_dict
 
-#print(occurrece(1)) # affiche 4
-#print(occurrece(8)) # affiche 3
-#print(occurrece(7)) # affiche 2
-#print(occurrece(9)) # affiche 2
-#print(occurrece(0)) # affiche 3
-            
-  
-  
-def occurrence_dc(arr, target):
-    if not arr:  # Base case: empty list
-        return 0
+# Get NBA teams
+nba_teams = teams.get_teams()
 
-    mid = len(arr) // 2
-    left_count = occurrence_dc(arr[:mid], target)  # Count occurrences in left half
-    right_count = occurrence_dc(arr[mid + 1:], target)  # Count occurrences in right half
+# Convert teams data to a DataFrame
+dict_nba_team = one_dict(nba_teams)
+df_teams = pd.DataFrame(dict_nba_team)
 
-    mid_count = 1 if arr[mid] == target else 0  # Check occurrence in the current mid element
+# Filter for the Golden State Warriors
+df_warriors = df_teams[df_teams['nickname'] == 'Warriors']
 
-    return left_count + right_count + mid_count
-  
-  
-          
-def TriOccurrence(n):
-    T=[1,1,1,1,1,3,3,3,3,3,3,6,6,6,6,6,6,8,8,8,8,9,9,9,9,9,9,9,9]
-    occ=0
-    start=0 
-    end=0
-    for i in range(0,len(T)+1):
-        if T[i]==n:
-            start=i
-            break
-    if start == 0: # If the number 'n' does not exist in the array 'T', we return 0
-        return 0
-    for j in range(start+1,len(T)+1):
-        if T[j-1]!=n:
-            end=j-1
-            break
-        
-    return end-start    
+# Get the team ID for the Warriors
+id_warriors = df_warriors['id'].values[0]
 
-print(TriOccurrence(1)) # Output: 5
-print(TriOccurrence(3)) # Output: 5
-print(TriOccurrence(6)) # Output: 6
-print(TriOccurrence(8)) # Output: 5
-print(TriOccurrence(9)) # Output: 8    
-        
-        
-    
+# Request game data using the NBA API
+gamefinder = leaguegamefinder.LeagueGameFinder(team_id_nullable=id_warriors)
+games = gamefinder.get_data_frames()[0]
+
+# Downloading data (optional, if not using the NBA API)
+# filename = "https://s3-api.us-geo.objectstorage.softlayer.net/cf-courses-data/CognitiveClass/PY0101EN/Chapter%205/Labs/Golden_State.pkl"
+# download(filename, "Golden_State.pkl")
+
+# Read data from the pickle file (optional, if not using the NBA API)
+# file_name = "Golden_State.pkl"
+# games = pd.read_pickle(file_name)
+
+# Filter games for Golden State Warriors home and away
+games_home = games[games['MATCHUP'] == 'GSW vs. TOR']
+games_away = games[games['MATCHUP'] == 'GSW @ TOR']
+
+# Calculate and print the mean PLUS_MINUS for home and away games
+print("Mean PLUS_MINUS for away games:", games_away['PLUS_MINUS'].mean())
+print("Mean PLUS_MINUS for home games:", games_home['PLUS_MINUS'].mean())
+
+# Plotting the PLUS_MINUS for home and away games
+fig, ax = plt.subplots()
+games_away.plot(x='GAME_DATE', y='PLUS_MINUS', ax=ax)
+games_home.plot(x='GAME_DATE', y='PLUS_MINUS', ax=ax)
+ax.legend(["away", "home"])
+plt.show()
