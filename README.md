@@ -18,7 +18,7 @@ Welcome to my Learn Python repository! This repository documents my journey in l
 
 ## Getting Started
 
-Feel free to explore any of the scripts listed above. Each script is accompanied by a brief description of its purpose and functionality. If you have any feedback, suggestions, or improvements, I'd love to hear from you!
+Feel free to explore any of the scripts listed above. If you have any feedback, suggestions, or improvements, I'd love to hear from you!
 
 ## Contribution
 
